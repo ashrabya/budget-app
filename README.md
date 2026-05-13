@@ -125,6 +125,5 @@ make build    # Compile binary
 make clean    # Remove build artifacts
 ```
 
-## 📄 License
-
-MIT
+## URL TO THE BUDGET APP
+https://ashrabya.github.io/budget-app/
