@@ -6,6 +6,13 @@
   <title>Cashflow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    // Apply a saved theme before first paint (same key as before, so existing choices carry over)
+    try {
+      const saved = localStorage.getItem('cashflow-theme');
+      if (saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+    } catch (e) {}
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Instrument+Sans:wght@400..600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,6 +31,10 @@
       --warn:    #b7862b;
       --accent:  #1c1b18;
       --focus:   #2f6b4f;
+      --grain-blend: multiply;
+      --grain-op:    0.045;
+      --dot-pos:     #7fb894;
+      --dot-neg:     #e08467;
 
       --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
       --sans:  'Instrument Sans', -apple-system, 'Helvetica Neue', sans-serif;
@@ -33,8 +44,9 @@
       color-scheme: light;
     }
 
+    /* Dark palette: follows the system unless the toggle forces a theme */
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme="light"]) {
         --paper:   #161512;
         --paper-2: #1e1d19;
         --card:    #1b1a17;
@@ -48,8 +60,32 @@
         --warn:    #d9ac57;
         --accent:  #ece6d8;
         --focus:   #7fb894;
+        --grain-blend: screen;
+        --grain-op:    0.03;
+        --dot-pos:     #2f6b4f;
+        --dot-neg:     #a8432a;
         color-scheme: dark;
       }
+    }
+    :root[data-theme="dark"] {
+      --paper:   #161512;
+      --paper-2: #1e1d19;
+      --card:    #1b1a17;
+      --ink:     #ece6d8;
+      --ink-2:   #c6bfb0;
+      --muted:   #8d8677;
+      --rule:    #34312a;
+      --rule-2:  #2a2823;
+      --pos:     #7fb894;
+      --neg:     #e08467;
+      --warn:    #d9ac57;
+      --accent:  #ece6d8;
+      --focus:   #7fb894;
+      --grain-blend: screen;
+      --grain-op:    0.03;
+      --dot-pos:     #2f6b4f;
+      --dot-neg:     #a8432a;
+      color-scheme: dark;
     }
 
     html { -webkit-text-size-adjust: 100%; }
@@ -70,11 +106,10 @@
       content: '';
       position: fixed; inset: 0;
       pointer-events: none; z-index: 1000;
-      opacity: 0.045;
-      mix-blend-mode: multiply;
+      opacity: var(--grain-op);
+      mix-blend-mode: var(--grain-blend);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
-    @media (prefers-color-scheme: dark) { body::before { mix-blend-mode: screen; opacity: 0.03; } }
 
     .num { font-variant-numeric: tabular-nums lining-nums; }
     .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
@@ -137,6 +172,24 @@
       padding: 6px 10px;
     }
     .period input:hover { border-color: var(--muted); }
+
+    .theme-toggle {
+      width: 34px; height: 34px; flex-shrink: 0;
+      display: grid; place-items: center;
+      background: transparent; color: var(--ink-2);
+      border: 1px solid var(--rule); border-radius: 6px;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .theme-toggle:hover { border-color: var(--muted); color: var(--ink); }
+    .theme-toggle svg { width: 16px; height: 16px; }
+    .theme-toggle .icon-sun { display: none; }
+    :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+    :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
+      :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+    }
 
     /* ===== VIEWS ===== */
     main { padding: clamp(28px, 5vw, 56px) 0 96px; }
@@ -504,12 +557,8 @@
       box-shadow: 0 10px 30px -10px rgba(0,0,0,.4);
       animation: toastIn .4s var(--ease-out), toastOut .3s ease 2.7s forwards;
     }
-    .toast::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--pos); }
-    .toast.error::before { background: var(--neg); }
-    @media (prefers-color-scheme: dark) {
-      .toast::before { background: #2f6b4f; }
-      .toast.error::before { background: #a8432a; }
-    }
+    .toast::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--dot-pos); }
+    .toast.error::before { background: var(--dot-neg); }
     @keyframes toastIn  { from { opacity: 0; transform: translate3d(0, 10px, 0); } }
     @keyframes toastOut { to   { opacity: 0; transform: translate3d(0, 6px, 0); } }
 
@@ -546,6 +595,10 @@
       <span>Period</span>
       <input type="month" id="monthPicker" onchange="onMonthChange()" />
     </label>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Switch light / dark" aria-label="Switch between light and dark theme">
+      <svg class="icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1Z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2.8"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
+    </button>
   </div>
 </header>
 
@@ -969,6 +1022,15 @@
     document.getElementById('view-' + name).classList.add('active');
     document.getElementById('nav-'  + name).classList.add('active');
     window.scrollTo({ top: 0 });
+  }
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme')
+      || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('cashflow-theme', next); } catch (e) {}
   }
 
   // Masthead rule appears once the page scrolls
